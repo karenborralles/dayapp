@@ -1,15 +1,18 @@
 import 'package:dayapp/routes/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart'; // 👈 importante para fechas locales
 
-import 'data/datasources/history_remote_datasource.dart';
-import 'data/repositories_impl/history_repository_impl.dart';
-import 'domain/usecases/get_today_events.dart';
-import 'presentation/blocs/history_bloc.dart';
-import 'presentation/blocs/history_event.dart';
+import 'package:dayapp/data/datasources/history_remote_datasource.dart';
+import 'package:dayapp/data/repositories_impl/history_repository_impl.dart';
+import 'package:dayapp/domain/usecases/get_today_events.dart';
+import 'package:dayapp/presentation/blocs/history_bloc.dart';
+import 'package:dayapp/presentation/blocs/history_event.dart';
 
-void main() {
-  // Instancias necesarias de capa inferior a superior
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // 👈 necesario para await
+  await initializeDateFormatting('es_MX', null); // 👈 activa formato regional
+
   final remoteDataSource = HistoryRemoteDataSource();
   final repository = HistoryRepositoryImpl(remoteDataSource);
   final getTodayEvents = GetTodayEvents(repository);
@@ -33,7 +36,18 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorSchemeSeed: Colors.teal,
-          scaffoldBackgroundColor: Colors.white,
+          scaffoldBackgroundColor: Colors.grey.shade50,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: true,
+            titleTextStyle: TextStyle(
+              color: Colors.black87,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            iconTheme: IconThemeData(color: Colors.teal),
+          ),
         ),
       ),
     );
