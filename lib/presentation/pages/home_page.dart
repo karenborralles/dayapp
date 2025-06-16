@@ -6,6 +6,10 @@ import 'package:intl/intl.dart';
 import '../../domain/entities/history_event.dart' as entity;
 import '../blocs/history_bloc.dart';
 import '../blocs/history_state.dart';
+import '../../widgets/century_header.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/event_card.dart';
+import '../../widgets/search_bar_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String searchYear = '';
+  final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -68,18 +73,8 @@ class _HomePageState extends State<HomePage> {
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 12),
-                      TextField(
-                        decoration: InputDecoration(
-                          hintText: '🔍 Buscar por año...',
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          prefixIcon: const Icon(Icons.search),
-                        ),
-                        keyboardType: TextInputType.number,
+                      SearchBarWidget(
+                        controller: searchController,
                         onChanged: (value) => setState(() => searchYear = value),
                       ),
                     ],
@@ -87,74 +82,45 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: AnimationLimiter(
-                    child: ListView.builder(
-                      itemCount: grouped.keys.length,
-                      padding: const EdgeInsets.only(bottom: 16),
-                      itemBuilder: (context, i) {
-                        final section = grouped.keys.elementAt(i);
-                        final items = grouped[section]!;
+                  child: filtered.isEmpty
+                      ? const EmptyState(message: 'No se encontraron eventos con ese año.')
+                      : AnimationLimiter(
+                          child: ListView.builder(
+                            itemCount: grouped.keys.length,
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemBuilder: (context, i) {
+                              final section = grouped.keys.elementAt(i);
+                              final items = grouped[section]!;
 
-                        return AnimationConfiguration.staggeredList(
-                          position: i,
-                          duration: const Duration(milliseconds: 400),
-                          child: SlideAnimation(
-                            horizontalOffset: 50.0,
-                            child: FadeInAnimation(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Text(
-                                        section,
-                                        style: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.teal,
-                                        ),
+                              return AnimationConfiguration.staggeredList(
+                                position: i,
+                                duration: const Duration(milliseconds: 400),
+                                child: SlideAnimation(
+                                  horizontalOffset: 50.0,
+                                  child: FadeInAnimation(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          CenturyHeader(text: section),
+                                          ...items.map(
+                                            (e) => EventCard(
+                                              event: e,
+                                              onTap: () {
+                                                context.push('/details/${e.year}', extra: filtered);
+                                              },
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    ...items.map(
-                                      (e) => GestureDetector(
-                                        onTap: () {
-                                          context.push('/details/${e.year}', extra: filtered);
-                                        },
-                                        child: Container(
-                                          margin: const EdgeInsets.symmetric(vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(14),
-                                            border: Border.all(color: Colors.teal.shade100, width: 1.3),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black12,
-                                                blurRadius: 4,
-                                                offset: const Offset(1, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ListTile(
-                                            leading: const Icon(Icons.access_time_filled_rounded,
-                                                color: Colors.teal),
-                                            title: Text('Año ${e.year}',
-                                                style: const TextStyle(fontWeight: FontWeight.w500)),
-                                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
-                  ),
+                        ),
                 ),
               ],
             );
@@ -165,7 +131,6 @@ class _HomePageState extends State<HomePage> {
         },
       ),
 
-      // 🔽 FAB con evento aleatorio
       floatingActionButton: BlocBuilder<HistoryBloc, HistoryState>(
         builder: (context, state) {
           if (state is HistoryLoaded && state.events.isNotEmpty) {
@@ -196,7 +161,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.of(context).pop(); // Cierra el modal
+                          Navigator.of(context).pop();
                           context.push('/details/${randomEvent.year}', extra: all);
                         },
                         icon: const Icon(Icons.open_in_new),

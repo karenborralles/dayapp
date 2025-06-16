@@ -1,8 +1,7 @@
 import 'package:dayapp/routes/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/date_symbol_data_local.dart'; // 👈 importante para fechas locales
-
+import 'package:intl/date_symbol_data_local.dart'; 
 import 'package:dayapp/data/datasources/history_remote_datasource.dart';
 import 'package:dayapp/data/repositories_impl/history_repository_impl.dart';
 import 'package:dayapp/domain/usecases/get_today_events.dart';
@@ -10,8 +9,8 @@ import 'package:dayapp/presentation/blocs/history_bloc.dart';
 import 'package:dayapp/presentation/blocs/history_event.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // 👈 necesario para await
-  await initializeDateFormatting('es_MX', null); // 👈 activa formato regional
+  WidgetsFlutterBinding.ensureInitialized(); 
+  await initializeDateFormatting('es_MX', null); 
 
   final remoteDataSource = HistoryRemoteDataSource();
   final repository = HistoryRepositoryImpl(remoteDataSource);
